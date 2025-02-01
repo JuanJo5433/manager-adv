@@ -2,6 +2,7 @@
 import CreateClientModal from "@/components/clients/CreateClientModal";
 import DeleteConfirmationModal from "@/components/clients/DeleteConfirmationModal";
 import EditClientModal from "@/components/clients/EditClientModal";
+import Sidebar from "@/components/sidebar/Sidebar";
 import useClientManagement from "@/hooks/useClientMangement";
 
 const ClientManagement = () => {
@@ -32,6 +33,7 @@ const ClientManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Sidebar/>
       <main className="md:ml-64 p-8 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">

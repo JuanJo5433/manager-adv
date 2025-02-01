@@ -11,6 +11,13 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      transitionProperty: {
+        'all': 'all',
+      },
+      transitionDuration: {
+        '200': '200ms',
+        '300': '300ms',
+      }
     },
   },
   plugins: [],
