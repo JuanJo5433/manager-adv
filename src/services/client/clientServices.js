@@ -1,5 +1,9 @@
 import { API_URL } from "@/utils/constast";
 
+/**
+ * Obtiene todos los clientes desde la API.
+ * @returns {Promise<Array>} Lista de clientes.
+ */
 export const getClients = async () => {
     try {
         const response = await fetch(`${API_URL}/clients`);
@@ -9,6 +13,11 @@ export const getClients = async () => {
     }
 };
 
+/**
+ * Crea un nuevo cliente en la API.
+ * @param {Object} clientData - Datos del cliente a crear.
+ * @returns {Promise<Object>} Cliente creado.
+ */
 export const createClient = async (clientData) => {
     try {
         const response = await fetch(`${API_URL}/clients`, {
@@ -22,6 +31,12 @@ export const createClient = async (clientData) => {
     }
 };
 
+/**
+ * Actualiza un cliente existente en la API.
+ * @param {number} id - ID del cliente a actualizar.
+ * @param {Object} clientData - Nuevos datos del cliente.
+ * @returns {Promise<Object>} Cliente actualizado.
+ */
 export const updateClient = async (id, clientData) => {
     try {
         const response = await fetch(`${API_URL}/clients?id=${id}`, {
@@ -35,6 +50,11 @@ export const updateClient = async (id, clientData) => {
     }
 };
 
+/**
+ * Elimina un cliente de la API (soft delete).
+ * @param {number} id - ID del cliente a eliminar.
+ * @returns {Promise<Object>} Respuesta de la API.
+ */
 export const deleteClient = async (id) => {
     try {
         const response = await fetch(`${API_URL}/clients?id=${id}`, {
@@ -46,6 +66,12 @@ export const deleteClient = async (id) => {
     }
 };
 
+/**
+ * Maneja la respuesta de la API.
+ * @param {Response} response - Respuesta de la API.
+ * @returns {Promise<Object>} Datos de la respuesta.
+ * @throws {Error} Si la respuesta no es exitosa.
+ */
 const handleResponse = async (response) => {
     const data = await response.json();
     if (!response.ok) {

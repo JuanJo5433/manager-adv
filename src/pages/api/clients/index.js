@@ -1,56 +1,26 @@
 import prisma from "@/lib/prisma";
 
+/**
+ * Maneja las solicitudes HTTP para la gestión de clientes.
+ * @param {Request} req - Objeto de solicitud HTTP.
+ * @param {Response} res - Objeto de respuesta HTTP.
+ */
 export default async function handler(req, res) {
     switch (req.method) {
         case 'GET':
-            try {
-                const clients = await prisma.client.findMany({
-                    where: { deletedAt: null }
-                });
-                res.status(200).json(clients);
-            } catch (error) {
-                handlePrismaError(res, error, 'Error obteniendo clientes');
-            }
+            await handleGetRequest(req, res);
             break;
 
         case 'POST':
-            try {
-                const newClient = await prisma.client.create({
-                    data: {
-                        ...req.body,
-                        deletedAt: null
-                    }
-                });
-                res.status(201).json(newClient);
-            } catch (error) {
-                handlePrismaError(res, error, 'Error creando cliente');
-            }
+            await handlePostRequest(req, res);
             break;
 
         case 'PUT':
-            try {
-                const { id } = req.query; // Obtén el id desde req.query
-                const updatedClient = await prisma.client.update({
-                    where: { id: parseInt(id) },
-                    data: req.body, // Usa req.body para los datos a actualizar
-                });
-                res.status(200).json(updatedClient);
-            } catch (error) {
-                handlePrismaError(res, error, 'Error actualizando cliente');
-            }
+            await handlePutRequest(req, res);
             break;
 
         case 'DELETE':
-            try {
-                const { id } = req.query;
-                const deletedClient = await prisma.client.update({
-                    where: { id: parseInt(id, 10) },
-                    data: { deletedAt: new Date() },
-                });
-                res.status(200).json({ message: 'Cliente eliminado correctamente.', client: deletedClient });
-            } catch (error) {
-                handlePrismaError(res, error, 'Error eliminando cliente');
-            }
+            await handleDeleteRequest(req, res);
             break;
 
         default:
@@ -59,6 +29,83 @@ export default async function handler(req, res) {
     }
 }
 
+/**
+ * Maneja las solicitudes GET para obtener todos los clientes.
+ * @param {Request} req - Objeto de solicitud HTTP.
+ * @param {Response} res - Objeto de respuesta HTTP.
+ */
+const handleGetRequest = async (req, res) => {
+    try {
+        const clients = await prisma.client.findMany({
+            where: { deletedAt: null }
+        });
+        res.status(200).json(clients);
+    } catch (error) {
+        handlePrismaError(res, error, 'Error obteniendo clientes');
+    }
+};
+
+/**
+ * Maneja las solicitudes POST para crear un nuevo cliente.
+ * @param {Request} req - Objeto de solicitud HTTP.
+ * @param {Response} res - Objeto de respuesta HTTP.
+ */
+const handlePostRequest = async (req, res) => {
+    try {
+        const newClient = await prisma.client.create({
+            data: {
+                ...req.body,
+                deletedAt: null
+            }
+        });
+        res.status(201).json(newClient);
+    } catch (error) {
+        handlePrismaError(res, error, 'Error creando cliente');
+    }
+};
+
+/**
+ * Maneja las solicitudes PUT para actualizar un cliente existente.
+ * @param {Request} req - Objeto de solicitud HTTP.
+ * @param {Response} res - Objeto de respuesta HTTP.
+ */
+const handlePutRequest = async (req, res) => {
+    try {
+        const { id } = req.query;
+        const updatedClient = await prisma.client.update({
+            where: { id: parseInt(id) },
+            data: req.body,
+        });
+        res.status(200).json(updatedClient);
+    } catch (error) {
+        handlePrismaError(res, error, 'Error actualizando cliente');
+    }
+};
+
+/**
+ * Maneja las solicitudes DELETE para eliminar un cliente (soft delete).
+ * @param {Request} req - Objeto de solicitud HTTP.
+ * @param {Response} res - Objeto de respuesta HTTP.
+ */
+const handleDeleteRequest = async (req, res) => {
+    try {
+        const { id } = req.query;
+        const deletedClient = await prisma.client.update({
+            where: { id: parseInt(id, 10) },
+            data: { deletedAt: new Date() },
+        });
+        res.status(200).json({ message: 'Cliente eliminado correctamente.', client: deletedClient });
+    } catch (error) {
+        handlePrismaError(res, error, 'Error eliminando cliente');
+    }
+};
+
+/**
+ * Maneja los errores de Prisma y devuelve una respuesta adecuada.
+ * @param {Response} res - Objeto de respuesta HTTP.
+ * @param {Error} error - Error capturado.
+ * @param {string} entity - Entidad afectada.
+ */
 const handlePrismaError = (res, error, entity) => {
     console.error(`Prisma Error: ${error.message}`);
 

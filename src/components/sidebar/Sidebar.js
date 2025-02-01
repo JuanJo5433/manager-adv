@@ -1,23 +1,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       setIsOpen(window.innerWidth >= 768);
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
   const toggleSidebar = () => setIsOpen(!isOpen);
-
   // Iconos SVG reutilizables
   const icons = {
     home: (
@@ -42,7 +37,6 @@ const Sidebar = () => {
       </svg>
     )
   };
-
   return (
     <>
       {isMobile && isOpen && (
@@ -51,7 +45,6 @@ const Sidebar = () => {
           onClick={toggleSidebar}
         />
       )}
-
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-lg transition-all duration-300 ease-in-out
           ${isOpen ? 'w-64' : 'w-20'}
@@ -75,7 +68,6 @@ const Sidebar = () => {
             />
           </svg>
         </button>
-
         <div className="flex items-center border-b p-4">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-800 text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +80,6 @@ const Sidebar = () => {
             Dashboard
           </span>
         </div>
-
         <nav className="flex-1 overflow-y-auto p-4">
           <ul className="space-y-1">
             {[
@@ -114,7 +105,6 @@ const Sidebar = () => {
             ))}
           </ul>
         </nav>
-
         <div className="border-t p-4">
           <div className={`flex items-center ${!isOpen && 'justify-center'}`}>
             <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -132,5 +122,4 @@ const Sidebar = () => {
     </>
   );
 };
-
 export default Sidebar;
