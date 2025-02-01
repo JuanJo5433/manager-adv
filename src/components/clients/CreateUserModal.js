@@ -2,11 +2,11 @@ import { useState } from 'react';
 
 const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
   const [formData, setFormData] = useState({
-    nombre: '',
-    documento: '',
-    telefono: '',
-    correo: '',
-    observacion: ''
+    name: '',
+    document: '',
+    phone: '',
+    email: '',
+    observation: ''
   });
 
   const handleSubmit = (e) => {
@@ -19,6 +19,7 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+     
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl text-gray-900  font-semibold">Nuevo Cliente</h2>
@@ -36,8 +37,8 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
               type="text"
               required
               className="w-full text-gray-600 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
           
@@ -47,8 +48,8 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
               type="text"
               required
               className="w-full text-gray-600  px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              value={formData.documento}
-              onChange={(e) => setFormData({ ...formData, documento: e.target.value })}
+              value={formData.document}
+              onChange={(e) => setFormData({ ...formData, document: e.target.value })}
             />
           </div>
           
@@ -58,8 +59,8 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
               type="tel"
               required
               className="w-full text-gray-600 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              value={formData.telefono}
-              onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
           </div>
           
@@ -69,8 +70,8 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
               type="email"
               required
               className="w-full text-gray-600 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              value={formData.correo}
-              onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
           
@@ -79,8 +80,8 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
             <textarea
               className="w-full text-gray-600 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               rows="3"
-              value={formData.observacion}
-              onChange={(e) => setFormData({ ...formData, observacion: e.target.value })}
+              value={formData.observation}
+              onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
             />
           </div>
           
@@ -101,6 +102,7 @@ const CreateClientModal = ({ isOpen, onClose, onCreate }) => {
           </div>
         </form>
       </div>
+      
     </div>
   );
 };
