@@ -21,25 +21,20 @@ export const createClient = async (clientData) => {
         throw new Error(`Error al crear cliente: ${error.message}`);
     }
 };
+
 export const updateClient = async (id, clientData) => {
     try {
-        const response = await fetch(`${API_URL}/client?id=${id}`, {
+        const response = await fetch(`${API_URL}/clients?id=${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(clientData),
         });
-
-        const data = await handleResponse(response);
-
-        if (!data.success) {
-            throw new Error(data.message || "Error actualizando cliente");
-        }
-
-        return data.data;
+        return await handleResponse(response);
     } catch (error) {
-        throw new Error(error.details?.message || error.message);
+        throw new Error(`Error al actualizar cliente: ${error.message}`);
     }
 };
+
 export const deleteClient = async (id) => {
     try {
         const response = await fetch(`${API_URL}/clients?id=${id}`, {
@@ -47,21 +42,14 @@ export const deleteClient = async (id) => {
         });
         return await handleResponse(response);
     } catch (error) {
-        throw new Error(
-            `Error al eliminar cliente (id: ${id}): ${error.message}`
-        );
+        throw new Error(`Error al eliminar cliente: ${error.message}`);
     }
 };
 
 const handleResponse = async (response) => {
     const data = await response.json();
-
     if (!response.ok) {
-        const error = new Error(data.message || "Error en la solicitud");
-        error.status = response.status;
-        error.details = data;
-        throw error;
+        throw new Error(data.message || "Error en la solicitud");
     }
-
     return data;
 };
