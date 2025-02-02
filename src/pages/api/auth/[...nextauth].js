@@ -19,11 +19,6 @@ export const authOptions = {
             throw new Error('Email/Usuario y contraseña son requeridos');
           }
       
-          // Verifica que prisma esté definido
-          if (!prisma) {
-            console.error("Prisma no está configurado");
-            throw new Error('Error de configuración del servidor');
-          }
       
           // Verifica la consulta a la base de datos
           const user = await prisma.users.findFirst({
@@ -37,20 +32,18 @@ export const authOptions = {
       
           console.log("Usuario encontrado:", user);
       
-          if (!user) {
-            throw new Error('Usuario no encontrado');
+          if (!user || !user.password) {
+            throw new Error('Credenciales inválidas');
           }
       
-          console.log('Contraseña almacenada (hash):', user.password);
           const isValid = await comparePassword(credentials.password, user.password);
-          console.log('Resultado de la comparación de contraseñas:', isValid);
       
           if (!isValid) {
             throw new Error('Contraseña incorrecta');
           }
       
           return {
-            id: user.id.toString(),
+            id: user.id,
             email: user.email,
             name: user.name || null
           };
@@ -77,9 +70,17 @@ export const authOptions = {
     },
   },
   
-  session: { strategy: 'jwt' },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 días
+    updateAge: 24 * 60 * 60, // Actualizar diario
+  },
   pages: {
     signIn: '/', // Personalizar la página de login
+  },
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+    encryption: true,
   },
   secret: process.env.NEXTAUTH_SECRET, // Asegúrate de que esta clave esté definida en tu archivo .env.local
   debug: process.env.NODE_ENV === 'development',
