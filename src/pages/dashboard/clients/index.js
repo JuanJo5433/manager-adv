@@ -2,6 +2,7 @@
 import CreateClientModal from "@/components/clients/CreateClientModal";
 import DeleteConfirmationModal from "@/components/clients/DeleteConfirmationModal";
 import EditClientModal from "@/components/clients/EditClientModal";
+import Pagination from "@/components/common/Pagination";
 import Sidebar from "@/components/sidebar/Sidebar";
 import useClientManagement from "@/hooks/useClientMangement";
 
@@ -195,54 +196,11 @@ const ClientManagement = () => {
                 </tbody>
               </table>
             </div>
-            <div className="border-t border-gray-200 px-4 py-3 sm:px-6">
-              <div className="flex justify-between items-center">
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div className="text-sm text-gray-700">
-                    Mostrando{" "}
-                    <span className="font-medium">
-                      {startIndex + 1}-{endIndex}
-                    </span>{" "}
-                    de{" "}
-                    <span className="font-medium">{clients.length}</span>{" "}
-                    resultados
-                  </div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() =>
-                        setCurrentPage(Math.max(1, currentPage - 1))
-                      }
-                      className="px-3 py-2 rounded-l-lg border bg-white text-gray-500 hover:bg-gray-50"
-                      disabled={currentPage === 1}
-                    >
-                      Anterior
-                    </button>
-                    {[...Array(totalPages)].map((_, index) => (
-                      <button
-                        key={index + 1}
-                        onClick={() => setCurrentPage(index + 1)}
-                        className={`px-3 py-2 border ${
-                          currentPage === index + 1
-                            ? "bg-blue-50 text-blue-600"
-                            : "bg-white text-gray-500 hover:bg-gray-50"
-                        }`}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() =>
-                        setCurrentPage(Math.min(totalPages, currentPage + 1))
-                      }
-                      className="px-3 py-2 rounded-r-lg border bg-white text-gray-500 hover:bg-gray-50"
-                      disabled={currentPage === totalPages}
-                    >
-                      Siguiente
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
+            <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={setCurrentPage}
+/>
           </div>
         </div>
         <CreateClientModal
