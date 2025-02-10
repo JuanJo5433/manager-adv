@@ -7,13 +7,14 @@ import {
 } from "@/services/product/productServices";
 import ProductModal from "@/components/products/ProductModal";
 import Sidebar from "@/components/sidebar/Sidebar";
-import DeleteConfirmationModal from "@/components/clients/DeleteConfirmationModal";
 import Pagination from "@/components/common/Pagination";
+import { fetchProductTypes } from "@/services/product/typeProducts/typeProductsServices";
+import DeleteConfirmationModal from "@/components/products/DeleteConfirmationModal";
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
+    const [productTypes, setProductTypes] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -25,11 +26,14 @@ const ProductsPage = () => {
     const endIndex = startIndex + itemsPerPage;
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            const data = await getProducts();
-            setProducts(data);
+        const fetchProductsAndTypes = async () => {
+            const productsData = await getProducts();
+            const productTypesData = await fetchProductTypes(); // Obtén los tipos de productos
+            setProducts(productsData);
+            setProductTypes(productTypesData);
         };
-        fetchProducts();
+
+           fetchProductsAndTypes();
     }, []);
 
     const filteredProducts = products
@@ -39,23 +43,49 @@ const ProductsPage = () => {
             )
         )
         .slice(startIndex, endIndex);
-
     const handleSaveProduct = async (productData) => {
         if (selectedProduct) {
             const updatedProduct = await updateProduct(
                 selectedProduct.id,
                 productData
             );
+
+            // Buscar el tipo de producto actualizado
+            const updatedProductType = productTypes?.find(
+                (type) => type.id === updatedProduct.productTypeId
+            );
+
             setProducts(
                 products.map((p) =>
-                    p.id === updatedProduct.id ? updatedProduct : p
+                    p.id === updatedProduct.id
+                        ? { ...updatedProduct, productType: updatedProductType }
+                        : p
                 )
             );
         } else {
             const newProduct = await createProduct(productData);
-            setProducts([...products, newProduct]);
+
+            // Buscar el tipo de producto para el nuevo producto
+            const newProductType = productTypes?.find(
+                (type) => type.id === newProduct.productTypeId
+            );
+
+            setProducts([
+                ...products,
+                { ...newProduct, productType: newProductType },
+            ]);
         }
+
         setIsModalOpen(false);
+    };
+
+    const handleDeleteProduct = async () => {
+        if (selectedProduct) {
+            await deleteProduct(selectedProduct.id);
+            setProducts(products.filter((p) => p.id !== selectedProduct.id));
+            setDeleteModalOpen(false);
+            setSelectedProduct(null);
+        }
     };
 
     return (
@@ -139,12 +169,7 @@ const ProductsPage = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Imagen
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Destino
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Duración
-                                        </th>
+
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Disponibilidad
                                         </th>
@@ -163,7 +188,8 @@ const ProductsPage = () => {
                                                 {product.name}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">
-                                                {product.type}
+                                                {product.productType?.name ||
+                                                    "Sin tipo"}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600">
                                                 {product.description || "N/A"}
@@ -187,12 +213,7 @@ const ProductsPage = () => {
                                                     "N/A"
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                                                {product.destination}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                                                {product.duration || "N/A"}
-                                            </td>
+
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600">
                                                 {product.availability
                                                     ? "Disponible"
@@ -274,20 +295,12 @@ const ProductsPage = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveProduct}
                 product={selectedProduct}
+                productTypes={productTypes} // Pasa los tipos de productos
             />
             <DeleteConfirmationModal
                 isOpen={deleteModalOpen}
                 onClose={() => setDeleteModalOpen(false)}
-                onDelete={async () => {
-                    await deleteProduct(selectedProduct.id);
-                    setProducts(
-                        products.filter(
-                            (product) => product.id !== selectedProduct.id
-                        )
-                    );
-                    setDeleteModalOpen(false);
-                }}
-                product={selectedProduct}
+                onConfirm={handleDeleteProduct}
             />
         </div>
     );

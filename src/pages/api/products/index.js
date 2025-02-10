@@ -29,6 +29,8 @@ const handleGetRequest = async (req, res) => {
   try {
     const products = await prisma.products.findMany({
       where: { deletedAt: null },
+      include: { productType: true },
+
     });
     return res.status(200).json(products);
   } catch (error) {
@@ -41,12 +43,27 @@ const handleGetRequest = async (req, res) => {
  */
 const handlePostRequest = async (req, res) => {
   try {
+    const { name, type, price, discount, description, availability, imageUrl } = req.body;
+
+    // Crear el nuevo producto y vincularlo con el tipo de producto por su ID
     const newProduct = await prisma.products.create({
-      data: req.body,
+      data: {
+        name,
+        price,
+        discount,
+        description,
+        availability,
+        imageUrl,
+        productType: {
+          connect: { id: parseInt(type, 10) }, // Conectar con el tipo de producto usando su ID
+        },
+      },
     });
+      
+
     return res.status(201).json(newProduct);
   } catch (error) {
-    return handleErrorResponse(res, error, "Error creando producto");
+    return res.status(500).json({ error: `Error creando producto: ${error.message}` });
   }
 };
 
@@ -60,7 +77,17 @@ const handlePutRequest = async (req, res) => {
 
     const updatedProduct = await prisma.products.update({
       where: { id: parseInt(id) },
-      data: req.body,
+      data: {
+        name: req.body.name,
+        price: req.body.price,
+        discount: req.body.discount,
+        description: req.body.description,
+        availability: req.body.availability,
+        imageUrl: req.body.imageUrl,
+        productType: {
+          connect: { id: parseInt(req.body.type, 10) }, // Conecta con el tipo de producto por su ID
+        },
+      },
     });
 
     return res.status(200).json(updatedProduct);

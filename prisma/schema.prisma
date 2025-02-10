@@ -34,20 +34,30 @@ model Users {
   @@map("users")
 }
 
+model ProductType {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  Products  Products[]
+
+  @@map("product_types")
+}
+
 model Products {
-  id           Int       @id @default(autoincrement())
-  name         String
-  type         String
-  description  String?
-  price        Float
-  discount     Float?
-  imageUrl     String?
-  destination  String
-  duration     String?
-  availability Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  id            Int         @id @default(autoincrement())
+  name          String
+  description   String?
+  price         Float
+  discount      Float?
+  imageUrl      String?
+  availability  Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt DateTime?
+  productTypeId Int // Relación con ProductType
+  productType   ProductType @relation(fields: [productTypeId], references: [id])
 
   @@map("products")
 }
