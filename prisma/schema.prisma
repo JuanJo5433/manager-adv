@@ -17,19 +17,24 @@ model Client {
   name        String
   observation String?
   phone       String?
+  Process     Process[]
 
   @@map("clients")
 }
 
 model Users {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String?
   username  String?
-  email     String   @unique
+  email     String    @unique
   password  String
   rol       String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  processes Process[] // Relación con procesos asignados
+  Task      Task[]
+  comments  Comments[] // Comentarios escritos por el usuario
+
 
   @@map("users")
 }
@@ -52,12 +57,61 @@ model Products {
   price         Float
   discount      Float?
   imageUrl      String?
+  processId     String?
+  process       Process?    @relation(fields: [processId], references: [id])
   availability  Boolean     @default(true)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  deletedAt DateTime?
+  deletedAt     DateTime?
   productTypeId Int // Relación con ProductType
   productType   ProductType @relation(fields: [productTypeId], references: [id])
 
   @@map("products")
+}
+
+model Process {
+  id        String     @id @default(uuid())
+  title     String
+  slug      String     @unique
+  clientId  Int?
+  client    Client?    @relation(fields: [clientId], references: [id])
+  userId    String // Usuario asignado al proceso
+  user      Users      @relation(fields: [userId], references: [id])
+  products  Products[]
+  status    Boolean    @default(true)
+  tasks     Task[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("process")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String // Ejemplo: "Confirmar vuelo"
+  description String?
+  processId   String
+  process     Process   @relation(fields: [processId], references: [id])
+  userId      String
+  user        Users     @relation(fields: [userId], references: [id]) // "Pendiente", "En progreso", "Completado"
+  deadline    DateTime?
+  status      Int // 0=pendiente, 1=en progreso, 2=Completado, 3=Cancelado 
+  priority    String // "Alta", "Media", "Baja"
+  comments    Comments[]
+  createdAt   DateTime  @default(now())
+
+  @@map("task")
+}
+
+
+model Comments {
+  id        String   @id @default(uuid())
+  text      String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  userId    String
+  user      Users    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("comments")
 }
