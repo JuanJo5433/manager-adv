@@ -1,81 +1,154 @@
+import { FC, useEffect, useState, useCallback, ChangeEvent } from "react";
+import Select from "react-select";
+
+import { Client, Products, Users } from "@/utils/types/types";
 import { getClients } from "@/services/client/clientServices";
+import { getUsers } from "@/services/users/userService";
+import { getProducts } from "@/services/product/productServices";
 import { getProcessCount } from "@/services/processes/processesServices";
-import { Client } from "@/utils/types/types";
-import React, { useEffect, useState, useCallback, ChangeEvent, FC } from "react";
+import { createProcessUsers } from "@/services/processUsers/processUsers";
+import { createProcessProducts } from "@/services/processProducts/processProducts";
 
-
-interface FormData {
+interface ProcessFormData {
   title: string;
   clientId: string;
   slug: string;
-  userId: string;
-  status: string;
+  status: number;
 }
 
 interface CreateProcessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: FormData) => void;
+  onCreate: (data: ProcessFormData) => Promise<string>;
 }
 
-const CreateProcessModal: FC<CreateProcessModalProps> = ({ isOpen, onClose, onCreate }) => {
-  // Estados con tipado explícito
+type SelectOption<T = string> = { value: T; label: string };
+
+const CreateProcessModal: FC<CreateProcessModalProps> = ({
+  isOpen,
+  onClose,
+  onCreate,
+}) => {
+  // Estados
   const [clients, setClients] = useState<Client[]>([]);
-  const [formData, setFormData] = useState<FormData>({
+  const [users, setUsers] = useState<Users[]>([]);
+  const [products, setProducts] = useState<Products[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [formData, setFormData] = useState<ProcessFormData>({
     title: "",
-    clientId: "0",
+    clientId: "-1",
     slug: "",
-    userId: "bd366615-e28e-4406-8b2c-d7a4d7275f9f",
-    status: "1",
+    status: 0,
   });
 
-  // Función para obtener clientes con tipado de retorno
-  const fetchClients = async () => {
-    const result = await getClients();
-    setClients(result as Client[]);
-  };
+  // Memoizar transformación de datos para Select
+  const userOptions = users.map(user => ({
+    value: user.id,
+    label: user.name || user.username || ""
+  }));
 
-  // Función para generar título con tipado de parámetros
-  const generateTitle = useCallback(
+  const productOptions = products.map(product => ({
+    value: product.id,
+    label: `${product.name} - ${product.productType?.name || ''}`
+  }));
+
+  // Fetch inicial de datos
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const [clientsData, usersData, productsData] = await Promise.all([
+        getClients(),
+        getUsers(),
+        getProducts()
+      ]);
+      
+      setClients(clientsData);
+      setUsers(usersData);
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+    }
+  }, []);
+
+  // Generar título y slug
+  const generateTitleAndSlug = useCallback(
     async (clientId: string) => {
-      if (!clientId || !clients.length) return "Título generado automáticamente";
+      if (!clientId || clients.length === 0) return "";
+      
+      try {
+        const [processCount, client] = await Promise.all([
+          getProcessCount(),
+          clients.find(c => c.id === clientId)
+        ]);
 
-      const processCount = await getProcessCount();
-      const selectedClient = clients.find((client) => client.id === clientId);
-
-      return selectedClient
-        ? `Reserva #${processCount + 1} - ${selectedClient.name}`
-        : "Título generado automáticamente";
+        return client 
+          ? `Reserva #${processCount + 1} - ${client.name}`
+          : "";
+      } catch (error) {
+        console.error("Error generating title:", error);
+        return "";
+      }
     },
     [clients]
   );
 
+  // Efectos
   useEffect(() => {
-    if (isOpen) fetchClients();
-  }, [isOpen]);
+    if (isOpen) fetchInitialData();
+  }, [isOpen, fetchInitialData]);
 
   useEffect(() => {
-    if (formData.clientId) {
-      generateTitle(formData.clientId).then((title) => {
-        setFormData((prev) => ({ ...prev, title }));
-      });
-    }
-  }, [formData.clientId, generateTitle]);
+    const updateTitleAndSlug = async () => {
+      if (formData.clientId && formData.clientId !== "-1") {
+        const title = await generateTitleAndSlug(formData.clientId);
+        setFormData(prev => ({
+          ...prev,
+          title,
+          slug: title.trim().replace(/\s+/g, "-").toLowerCase(),
+        }));
+      }
+    };
+    
+    updateTitleAndSlug();
+  }, [formData.clientId, generateTitleAndSlug]);
 
-  // Manejador de cambios con tipado de evento
-  const handleChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "clientId" ? parseInt(value, 10) : value,
-    }));
+  // Manejadores de eventos
+  const handleSelectChange = (name: keyof ProcessFormData) => 
+    (e: ChangeEvent<HTMLSelectElement>) => {
+      setFormData(prev => ({ ...prev, [name]: e.target.value }));
+    };
+
+  const handleUserSelection = (options: readonly SelectOption[]) => {
+    setSelectedUserIds(options.map(opt => opt.value));
   };
 
-  // Manejador de submit con tipado de evento
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleProductSelection = (options: readonly SelectOption[]) => {
+    setSelectedProductIds(options.map(opt => opt.value));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(formData);
-    onClose();
+    
+    try {
+      const processId = await onCreate(formData);
+      
+      if (processId) {
+        await Promise.all([
+          createProcessUsers({
+            processId,
+            usersId: selectedUserIds
+          }),
+          createProcessProducts({
+            processId,
+            productsId: selectedProductIds
+          })
+        ]);
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error("Error creating process:", error);
+    }
   };
 
   if (!isOpen) return null;
@@ -87,7 +160,7 @@ const CreateProcessModal: FC<CreateProcessModalProps> = ({ isOpen, onClose, onCr
           <h2 className="text-xl text-gray-900 font-semibold">Nuevo Proceso</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 transition-colors"
             aria-label="Cerrar modal"
           >
             <svg
@@ -108,15 +181,9 @@ const CreateProcessModal: FC<CreateProcessModalProps> = ({ isOpen, onClose, onCr
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Título
-            </label>
-            <input
-              type="text"
-              disabled
-              className="w-full text-gray-600 px-3 py-2 border rounded-lg"
-              value={formData.title}
-            />
+            <h2 className="block text-base font-medium text-gray-700 mb-1">
+              {formData.title || "Nuevo proceso"}
+            </h2>
           </div>
 
           <div>
@@ -126,14 +193,12 @@ const CreateProcessModal: FC<CreateProcessModalProps> = ({ isOpen, onClose, onCr
             <select
               required
               name="clientId"
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               value={formData.clientId}
-              onChange={handleChange}
+              onChange={handleSelectChange("clientId")}
             >
-              <option value={-1} disabled>
-                Seleccione un cliente
-              </option>
-              {clients.map((client) => (
+              <option value="-1" disabled>Seleccione un cliente</option>
+              {clients.map(client => (
                 <option key={client.id} value={client.id}>
                   {client.name} - {client.document}
                 </option>
@@ -143,44 +208,41 @@ const CreateProcessModal: FC<CreateProcessModalProps> = ({ isOpen, onClose, onCr
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Persona asignada
+              Personas asignadas
             </label>
-            <select
-              name="userId"
-              className="w-full px-3 py-2 border rounded-lg"
-              value={formData.userId}
-              onChange={handleChange}
-            >
-              <option value="1">Empleado 1</option>
-            </select>
+            <Select
+              options={userOptions}
+              isMulti
+              onChange={handleUserSelection}
+              classNamePrefix="react-select"
+              placeholder="Seleccionar usuarios..."
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado
+              Productos
             </label>
-            <select
-              name="status"
-              className="w-full px-3 py-2 border rounded-lg"
-              value={formData.status}
-              onChange={handleChange}
-            >
-              <option value="1">Activo</option>
-              <option value="2">Inactivo</option>
-            </select>
+            <Select
+              options={productOptions}
+              isMulti
+              onChange={handleProductSelection}
+              classNamePrefix="react-select"
+              placeholder="Seleccionar productos..."
+            />
           </div>
 
           <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Crear Proceso
             </button>

@@ -1,19 +1,10 @@
+import { handleErrorResponse } from '@/utils/handleErrorResponse';
+import { Products } from '@/utils/types/types';
 import { PrismaClient } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 // Inicializa la instancia de Prisma.
 const prisma = new PrismaClient();
-
-// Define los tipos de datos para el cuerpo de las solicitudes.
-interface ProductRequestBody {
-    name: string;
-    type: string; // ID del tipo de producto .
-    price: number;
-    discount?: number;
-    description?: string;
-    availability: boolean;
-    imageUrl?: string;
-}
 
 
 /**
@@ -59,8 +50,8 @@ const handleGetRequest = async (res: NextApiResponse) => {
  */
 const handlePostRequest = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
-        const { name, type, price, discount, description, availability, imageUrl } = req.body as ProductRequestBody;
-
+        const { name, productTypeId, price, discount, description, availability, imageUrl } = req.body as Products;
+console.log(req.body )
         // Crear el nuevo producto y vincularlo con el tipo de producto por su ID
         const newProduct = await prisma.products.create({
             data: {
@@ -71,7 +62,7 @@ const handlePostRequest = async (req: NextApiRequest, res: NextApiResponse) => {
                 availability,
                 imageUrl,
                 productType: {
-                    connect: { id:type }, // Conectar con el tipo de producto usando su ID
+                    connect: { id:productTypeId }, // Conectar con el tipo de producto usando su ID
                 },
             },
         });
@@ -94,7 +85,7 @@ const handlePutRequest = async (req: NextApiRequest, res: NextApiResponse) => {
             return res.status(400).json({ error: 'ID del producto requerido' });
         }
 
-        const { name, type, price, discount, description, availability, imageUrl } = req.body as ProductRequestBody;
+        const { name, productTypeId, price, discount, description, availability, imageUrl } = req.body as Products;
 
         const updatedProduct = await prisma.products.update({
             where: { id: id},
@@ -106,7 +97,7 @@ const handlePutRequest = async (req: NextApiRequest, res: NextApiResponse) => {
                 availability,
                 imageUrl,
                 productType: {
-                    connect: { id: type}, // Conectar con el tipo de producto usando su ID
+                    connect: { id: productTypeId}, // Conectar con el tipo de producto usando su ID
                 },
             },
         });
@@ -138,23 +129,4 @@ const handleDeleteRequest = async (req: NextApiRequest, res: NextApiResponse) =>
     } catch (error) {
         return handleErrorResponse(res, error, 'Error eliminando producto');
     }
-};
-
-/**
- * Manejo de errores de Prisma
- */
-const handleErrorResponse = (res: NextApiResponse, error: any, message: string) => {
-    console.error(`${message}:`, error);
-
-    if (error.code === 'P2025') {
-        return res.status(404).json({ success: false, message: `${message}: No encontrado` });
-    }
-    if (error.code === 'P2002') {
-        const field = error.meta?.target?.[0];
-        return res.status(409).json({
-            success: false,
-            message: field ? `El ${field} ya está en uso` : 'Conflicto de datos único',
-        });
-    }
-    return res.status(500).json({ success: false, message: `${message}: ${error.message}` });
 };

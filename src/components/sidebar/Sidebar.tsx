@@ -1,4 +1,4 @@
-import { useState, useEffect, FC, JSX } from "react";
+import { useState, FC, JSX } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { FiUsers } from "react-icons/fi";
@@ -17,21 +17,10 @@ interface MenuItem {
 }
 
 const Sidebar: FC = () => {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      setIsOpen(!mobile);
-    };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -55,7 +44,7 @@ const Sidebar: FC = () => {
 
   return (
     <>
-      {isMobile && isOpen && (
+      {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={toggleSidebar}
@@ -64,8 +53,8 @@ const Sidebar: FC = () => {
 
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-lg transition-all duration-300 ease-in-out
-          ${isOpen ? "w-64" : "w-20"}
-          ${isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
+          ${isOpen ? "w-64" : "w-20"}`}
+     
       >
         <button
           onClick={toggleSidebar}

@@ -1,13 +1,7 @@
 // Importa la constante API_URL desde el archivo de constantes.
 import { API_URL } from "@/utils/constast";
+import { ProductType } from "@/utils/types/types";
 
-// Define el tipo de datos para un tipo de producto
-interface ProductType {
-    id: string;
-    name: string;
-    description?: string;
-    // Otras propiedades relevantes...
-}
 
 /**
  * Obtener todos los tipos de productos.

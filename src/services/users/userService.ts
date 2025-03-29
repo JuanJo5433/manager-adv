@@ -1,36 +1,27 @@
 // Importa la constante API_URL desde el archivo de constantes, que define la URL base de la API.
 import { API_URL } from "@/utils/constast";
-
-// Define el tipo de datos para un usuario
-interface User {
-    [x: string]: any;
-    id: string;
-    username: string;
-    email: string;
-    // Otras propiedades relevantes...
-}
+import { Users } from "@/utils/types/types";
 
 
 /**
  * Función asíncrona para obtener la información de un usuario por su ID.
- * @param {string} id - ID del usuario que se desea obtener.
  * @returns {Promise<User>} Datos del usuario.
  */
-export const getUserById = async (id: string): Promise<User> => {
+export const getUsers = async (): Promise<Users[]> => {
     try {
         // Realiza una petición HTTP GET a la API para obtener el usuario con el ID especificado.
-        const response = await fetch(`${API_URL}/users/user/${id}`);
+        const response = await fetch(`${API_URL}/users`);
         
         // Imprime en consola la respuesta recibida para fines de depuración.
-        console.log("🚀 ~ getUserById ~ response:", response);
+        console.log("🚀 ~ getUsers ~ response:", response);
 
         // Procesa la respuesta y devuelve los datos en formato JSON utilizando la función handleResponse.
         return await handleResponse(response);
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Error al eliminar cliente: ${error.message}`);
+            throw new Error(`Error al obtener el cliente: ${error.message}`);
         } else {
-            throw new Error("Error al eliminar cliente");
+            throw new Error("Error al obtener el cliente");
         }
     }
 };

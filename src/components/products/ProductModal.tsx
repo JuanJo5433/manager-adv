@@ -1,41 +1,23 @@
-import React from "react";
-import { FC, useEffect, useState, ChangeEvent, FormEvent } from "react";
-
-interface ProductType {
-  id: string;
-  name: string;
-}
-
-// Define el tipo de datos para un producto
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  discount?: number;
-  imageUrl?: string;
-  availability: boolean;
-  productType?: {
-      id: string;
-      name: string;
-  };
-}
+import React, { FC, useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { Products, ProductType } from "@/utils/types/types";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Omit<Product, "id" | "productType"> & { 
-    type: string;
-    price: number;
-    discount: number;
-  }) => void;
-  product?: Product | null; // Permitir que sea undefined o null
-  productTypes: ProductType[] | [];
+  onSave: (
+    product: Omit<Products, "id" | "productType"> & {
+      type: string;
+      price: number;
+      discount: number;
+    }
+  ) => void;
+  product?: Products | null;
+  productTypes: ProductType[];
 }
 
 interface FormData {
   name: string;
-  type: string;
+  productTypeId: string;
   price: string;
   discount: string;
   description: string;
@@ -52,7 +34,7 @@ const ProductModal: FC<ProductModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<FormData>({
     name: "",
-    type: "",
+    productTypeId: "",
     price: "",
     discount: "",
     description: "",
@@ -61,11 +43,10 @@ const ProductModal: FC<ProductModalProps> = ({
   });
 
   useEffect(() => {
-    if (product != null) { // Se asegura de que no sea null ni undefined
-
+    if (product) {
       setFormData({
         name: product.name,
-        type: product.productType?.id || "",
+        productTypeId: product.productType.id,
         price: product.price.toString(),
         discount: product.discount?.toString() || "",
         description: product.description || "",
@@ -75,7 +56,7 @@ const ProductModal: FC<ProductModalProps> = ({
     } else {
       setFormData({
         name: "",
-        type: "",
+        productTypeId: "",
         price: "",
         discount: "",
         description: "",
@@ -90,8 +71,8 @@ const ProductModal: FC<ProductModalProps> = ({
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
@@ -99,14 +80,17 @@ const ProductModal: FC<ProductModalProps> = ({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
     const updatedFormData = {
       ...formData,
       price: parseFloat(formData.price),
       discount: parseFloat(formData.discount) || 0,
     };
+
     onSave({
       ...updatedFormData,
-      type: formData.type,
+      type: formData.productTypeId,
+      productId: product?.id || "", // Add productId to the object
     });
   };
 
@@ -120,7 +104,6 @@ const ProductModal: FC<ProductModalProps> = ({
         </h2>
         
         <form onSubmit={handleSubmit}>
-          {/* Campos del formulario */}
           <div className="mb-4">
             <label className="block mb-1">Nombre</label>
             <input
@@ -136,8 +119,8 @@ const ProductModal: FC<ProductModalProps> = ({
           <div className="mb-4">
             <label className="block mb-1">Tipo</label>
             <select
-              name="type"
-              value={formData.type}
+              name="productTypeId"
+              value={formData.productTypeId}
               onChange={handleChange}
               required
               className="w-full border px-3 py-2 rounded"
@@ -165,7 +148,9 @@ const ProductModal: FC<ProductModalProps> = ({
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1">Descuento en porcentaje (Opcional)</label>
+            <label className="block mb-1">
+              Descuento en porcentaje (Opcional)
+            </label>
             <input
               type="number"
               name="discount"

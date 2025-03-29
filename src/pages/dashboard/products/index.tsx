@@ -11,35 +11,15 @@ import Pagination from "@/components/common/Pagination";
 import { fetchProductTypes } from "@/services/product/typeProducts/typeProductsServices";
 import DeleteConfirmationModal from "@/components/products/DeleteConfirmationModal";
 import React from "react";
-
-// Define el tipo de datos para un producto
-interface Product {
-    id: string;
-    name: string;
-    description?: string;
-    price: number;
-    discount?: number;
-    imageUrl?: string;
-    availability: boolean;
-    productType?: {
-        id: string;
-        name: string;
-    };
-}
-
-// Define el tipo de datos para un tipo de producto
-interface ProductType {
-    id: string;
-    name: string;
-}
+import { Products, ProductType } from "@/utils/types/types";
 
 const ProductsPage: React.FC = () => {
     // Estados del componente
-    const [products, setProducts] = useState<Product[]>([]);
-    const [productTypes, setProductTypes] = useState<ProductType[] | null>(null);
+    const [products, setProducts] = useState<Products[]>([]);
+    const [productTypes, setProductTypes] = useState<ProductType[]>([]); // Ahora se inicia como array vacío
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<Products | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -49,12 +29,13 @@ const ProductsPage: React.FC = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
 
-    // Efecto para cargar productos y tipos de productos al montar el componente
+    // Cargar productos y tipos de productos al montar el componente
     useEffect(() => {
         const fetchProductsAndTypes = async () => {
             try {
                 const productsData = await getProducts();
-                const productTypesData = await fetchProductTypes(); // Obtén los tipos de productos
+                const productTypesData = await fetchProductTypes();
+                console.log("🚀 ~ fetchProductsAndTypes ~ productTypesData:", productTypesData)
                 setProducts(productsData);
                 setProductTypes(productTypesData);
             } catch (error) {
@@ -65,7 +46,7 @@ const ProductsPage: React.FC = () => {
         fetchProductsAndTypes();
     }, []);
 
-    // Filtrar productos basados en la búsqueda
+    // Filtrar productos basados en la búsqueda y paginar
     const filteredProducts = products
         .filter((product) =>
             Object.values(product).some((value) =>
@@ -78,28 +59,36 @@ const ProductsPage: React.FC = () => {
     const handleSaveProduct = async (productData: any) => {
         try {
             if (selectedProduct) {
-                const updatedProduct = await updateProduct(selectedProduct.id, productData);
-
+                const updatedProduct = await updateProduct(
+                    selectedProduct.id,
+                    productData
+                );
                 // Buscar el tipo de producto actualizado
-                const updatedProductType = productTypes?.find(
+                const updatedProductType = productTypes.find(
                     (type) => type.id === updatedProduct.productTypeId
                 );
-
+                if (!updatedProductType) {
+                    throw new Error("Tipo de producto no encontrado");
+                }
                 setProducts(
                     products.map((p) =>
                         p.id === updatedProduct.id
-                            ? { ...updatedProduct, productType: updatedProductType }
+                            ? {
+                                  ...updatedProduct,
+                                  productType: updatedProductType,
+                              }
                             : p
                     )
                 );
             } else {
                 const newProduct = await createProduct(productData);
-
                 // Buscar el tipo de producto para el nuevo producto
-                const newProductType = productTypes?.find(
+                const newProductType = productTypes.find(
                     (type) => type.id === newProduct.productTypeId
                 );
-
+                if (!newProductType) {
+                    throw new Error("Tipo de producto no encontrado");
+                }
                 setProducts([
                     ...products,
                     { ...newProduct, productType: newProductType },
@@ -225,7 +214,7 @@ const ProductsPage: React.FC = () => {
                                                 {product.name}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">
-                                                {product.productType?.name || "Sin tipo"}
+                                                {product.productType.name}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600">
                                                 {product.description || "N/A"}
@@ -234,7 +223,9 @@ const ProductsPage: React.FC = () => {
                                                 ${product.price.toFixed(2)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                                                {product.discount ? `${product.discount}%` : "N/A"}
+                                                {product.discount
+                                                    ? `${product.discount}%`
+                                                    : "N/A"}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600">
                                                 {product.imageUrl ? (
@@ -248,7 +239,9 @@ const ProductsPage: React.FC = () => {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                                                {product.availability ? "Disponible" : "No Disponible"}
+                                                {product.availability
+                                                    ? "Disponible"
+                                                    : "No Disponible"}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center space-x-4">
@@ -302,7 +295,6 @@ const ProductsPage: React.FC = () => {
                             </table>
                         </div>
 
-                        {/* Paginación */}
                         <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
@@ -312,13 +304,12 @@ const ProductsPage: React.FC = () => {
                 </div>
             </main>
 
-            {/* Modales */}
             <ProductModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveProduct}
                 product={selectedProduct}
-                productTypes={productTypes || []} // Pasa los tipos de productos
+                productTypes={productTypes} // Se pasa el array de tipos (requerido)
             />
             <DeleteConfirmationModal
                 isOpen={deleteModalOpen}

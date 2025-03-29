@@ -1,107 +1,97 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/lib/prisma';
-
-interface Comment {
-  id?: number;
-  text: string;
-  createdBy: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  // Agrega más propiedades según tu modelo
-}
+import { NextApiRequest, NextApiResponse } from "next";
+import prisma from "@/lib/prisma";
+import { Comments } from "@/utils/types/types";
+import { handleErrorResponse } from "@/utils/handleErrorResponse";
 
 interface ErrorResponse {
-  success: boolean;
-  message: string;
-}
-
-interface PrismaError extends Error {
-  code?: string;
-  meta?: {
-    target?: string[];
-  };
+    success: boolean;
+    message: string;
 }
 
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Comment | ErrorResponse>
+    req: NextApiRequest,
+    res: NextApiResponse<Comments | Comments[] | ErrorResponse>
 ) {
-  try {
-    switch (req.method) {
-      case 'POST':
-        await handlePostRequest(req, res);
-        break;
-
-      default:
-        res.setHeader('Allow', ['POST']);
-        res.status(405).json({
-          success: false,
-          message: `Method ${req.method} Not Allowed`
-        });
+    try {
+        switch (req.method) {
+            case "POST":
+                await handlePostRequest(req, res);
+                break;
+            case "GET":
+                await handleGetRequest(res);
+                break;
+            default:
+                res.setHeader("Allow", ["POST", "GET"]);
+                res.status(405).json({
+                    success: false,
+                    message: `Método ${req.method} no permitido`,
+                });
+        }
+    } catch (error) {
+        handleErrorResponse(res, error, "Error en el endpoint de comentarios");
     }
-  } catch (error) {
-    handlePrismaError(res, error, 'Error en el endpoint de comentarios');
-  }
 }
 
 const handlePostRequest = async (
-  req: NextApiRequest,
-  res: NextApiResponse<Comment | ErrorResponse>
+    req: NextApiRequest,
+    res: NextApiResponse<Comments | ErrorResponse>
 ) => {
-  try {
-    const commentData: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'> & { task: { connect: { id: string } }, user: { connect: { id: string } } } = {
-      ...req.body,
-      task: { connect: { id: req.body.task } },
-      user: { connect: { id: req.body.user } }
-    };
-    
-    // Validación básica de datos
-    if (!commentData.text || !commentData.createdBy) {
-      return res.status(400).json({
-        success: false,
-        message: 'Texto y creador son campos requeridos'
-      });
+    try {
+        const { text, taskId, userId } = req.body;
+
+        // Validación de datos obligatorios
+        if (!text || !taskId || !userId) {
+            return res.status(400).json({
+                success: false,
+                message: "Todos los campos (text, taskId, userId) son requeridos",
+            });
+        }
+
+        const newComment = await prisma.comments.create({
+            data: { text, taskId, userId },
+            select: {
+                id: true,
+                text: true,
+                taskId: true,
+                userId: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        username: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        res.status(201).json(newComment);
+    } catch (error) {
+        handleErrorResponse(res, error, "Error creando comentario");
     }
-
-    const newComment = await prisma.comments.create({
-      data: commentData
-    });
-
-    res.status(201).json({
-      ...newComment,
-      id: Number(newComment.id),
-      createdBy: commentData.createdBy
-    });
-  } catch (error) {
-    handlePrismaError(res, error, 'Error creando comentario');
-  }
 };
 
-const handlePrismaError = (
-  res: NextApiResponse<ErrorResponse>,
-  error: unknown,
-  context: string
+const handleGetRequest = async (
+    res: NextApiResponse<Comments[] | ErrorResponse>
 ) => {
-  const err = error as PrismaError;
-  console.error(`${context}:`, err.message);
+    try {
+        const comments = await prisma.comments.findMany({
+            select: {
+                id: true,
+                text: true,
+                taskId: true,
+                userId: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        username: true,
+                        name: true,
+                    },
+                },
+            },
+        });
 
-  if (err.code === 'P2025') {
-    return res.status(404).json({
-      success: false,
-      message: `${context}: Recurso no encontrado`
-    });
-  }
-
-  if (err.code === 'P2002') {
-    const field = err.meta?.target?.[0] || 'campo único';
-    return res.status(409).json({
-      success: false,
-      message: `${context}: Conflicto en ${field}`
-    });
-  }
-
-  res.status(500).json({
-    success: false,
-    message: `${context}: ${err.message || 'Error desconocido'}`
-  });
+        res.status(200).json(comments);
+    } catch (error) {
+        handleErrorResponse(res, error, "Error obteniendo comentarios");
+    }
 };

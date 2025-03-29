@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 // Importa la instancia de Prisma desde la librería personalizada.
 import prisma from '@/lib/prisma';
+import { handleErrorResponse } from '@/utils/handleErrorResponse';
 
 // Define el tipo de datos para el cuerpo de las solicitudes.
 interface ProductTypeRequestBody {
@@ -77,7 +78,7 @@ const handlePutRequest = async (req: NextApiRequest, res: NextApiResponse) => {
         const { name } = req.body as ProductTypeRequestBody;
 
         const updatedProductType = await prisma.productType.update({
-            where: { id: parseInt(id, 10) },
+            where: { id: id },
             data: { name },
         });
 
@@ -100,7 +101,7 @@ const handleDeleteRequest = async (req: NextApiRequest, res: NextApiResponse) =>
         }
 
         const deletedProductType = await prisma.productType.delete({
-            where: { id: parseInt(id, 10) },
+            where: { id:id },
         });
 
         return res.status(200).json({ message: 'Tipo de producto eliminado', productType: deletedProductType });
@@ -109,21 +110,3 @@ const handleDeleteRequest = async (req: NextApiRequest, res: NextApiResponse) =>
     }
 };
 
-/**
- * Manejo de errores de Prisma
- */
-const handleErrorResponse = (res: NextApiResponse, error: any, message: string) => {
-    console.error(`${message}:`, error);
-
-    if (error.code === 'P2025') {
-        return res.status(404).json({ success: false, message: `${message}: No encontrado` });
-    }
-    if (error.code === 'P2002') {
-        const field = error.meta?.target?.[0];
-        return res.status(409).json({
-            success: false,
-            message: field ? `El ${field} ya está en uso` : 'Conflicto de datos único',
-        });
-    }
-    return res.status(500).json({ success: false, message: `${message}: ${error.message}` });
-};

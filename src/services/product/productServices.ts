@@ -1,25 +1,13 @@
 // Importa la constante API_URL desde el archivo de constantes.
 // Asegúrate de que API_URL apunte a "/api/products".
 import { API_URL } from "@/utils/constast";
-
-// Define el tipo de datos para un producto
-interface Product {
-    id: string;
-    name: string;
-    description?: string;
-    price: number;
-    discount?: number;
-    imageUrl?: string;
-    availability: boolean;
-    productTypeId: string;
-    // Otras propiedades relevantes...
-}
+import { Products } from "@/utils/types/types";
 
 /**
  * Obtener todos los productos.
  * @returns {Promise<Product[]>} Lista de productos.
  */
-export const getProducts = async (): Promise<Product[]> => {
+export const getProducts = async (): Promise<Products[]> => {
     try {
         const response = await fetch(`${API_URL}/products`);
         if (!response.ok) throw new Error("Error al obtener productos");
@@ -31,11 +19,28 @@ export const getProducts = async (): Promise<Product[]> => {
 };
 
 /**
+ * Obtener todos los productos.
+ * @returns {Promise<Product[]>} Lista de productos.
+ */
+export const getProductById = async (id: string): Promise<Partial<Products[]>> => {
+    try {
+        const response = await fetch(`${API_URL}/products/product/${id}`);
+        if (!response.ok) throw new Error("Error al obtener productos");
+        console.log("🚀 ~ getProductById ~ response:", response)
+        return await response.json();
+    } catch (error) {
+        console.error("Error en getProducts:", error);
+        throw error;
+    }
+};
+
+
+/**
  * Crear un nuevo producto.
  * @param {Omit<Product, "id">} productData - Datos del producto a crear (sin el campo "id").
  * @returns {Promise<Product>} Producto creado.
  */
-export const createProduct = async (productData: Omit<Product, "id">): Promise<Product> => {
+export const createProduct = async (productData: Omit<Products, "id">): Promise<Products> => {
     console.log("🚀 ~ createProduct ~ productData:", productData);
     try {
         const response = await fetch(`${API_URL}/products`, {
@@ -59,7 +64,7 @@ export const createProduct = async (productData: Omit<Product, "id">): Promise<P
  * @param {Partial<Product>} productData - Datos del producto a actualizar.
  * @returns {Promise<Product>} Producto actualizado.
  */
-export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
+export const updateProduct = async (id: string, productData: Partial<Products>): Promise<Products> => {
     try {
         const response = await fetch(`${API_URL}/products?id=${id}`, {
             method: "PUT",

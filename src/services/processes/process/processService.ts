@@ -1,19 +1,7 @@
 // Importa la constante API_URL desde el archivo de constantes.
 // API_URL representa la URL base que se utiliza para hacer solicitudes a la API.
 import { API_URL } from "@/utils/constast";
-
-// Define el tipo de datos para un proceso
-interface Process {
-    length: number;
-    id: string;
-    title: string;
-    description?: string;
-    status: "pending" | "in_progress" | "completed";
-    clientId: string;
-    createdAt: string;
-    // Otras propiedades relevantes...
-}
-
+import { Process } from "@/utils/types/types";
 
 /**
  * Función asíncrona para obtener un proceso específico por su ID.
@@ -31,13 +19,31 @@ export const getProcessById = async (id: string): Promise<Process> => {
         return await handleResponse(response);
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Error al eliminar cliente: ${error.message}`);
+            throw new Error(`Error al obtener el proceso: ${error.message}`);
         } else {
-            throw new Error("Error al eliminar cliente");
+            throw new Error("Error al obtener el proceso");
         }
     }
 };
+export const deleteProcessById = async (id: string): Promise<void> => {
+    try {
+        // Realiza una solicitud HTTP DELETE a la API para eliminar el proceso con el ID proporcionado.
+        const response = await fetch(`${API_URL}/processes/process/${id}`, {
+            method: "DELETE",
+        });
+        // Muestra en consola la respuesta obtenida para facilitar la depuración.
+        console.log("🚀 ~ deleteProcessById ~ response:", response);
 
+        // Procesa la respuesta y devuelve los datos en formato JSON.
+        return await handleResponse(response);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`Error al eliminar el proceso: ${error.message}`);
+        } else {
+            throw new Error("Error al eliminar el proceso");
+        }
+    }
+}
 /**
  * Función auxiliar que maneja la respuesta de la API.
  * Convierte la respuesta a JSON y verifica si la solicitud fue exitosa.

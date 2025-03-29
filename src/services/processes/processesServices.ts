@@ -1,18 +1,7 @@
 // Importa la constante API_URL desde el archivo de constantes.
 // API_URL representa la URL base para realizar solicitudes a la API.
 import { API_URL } from "@/utils/constast";
-
-// Define el tipo de datos para un proceso
-interface Process {
-    id: string;
-    title: string;
-    description?: string;
-    status: "pending" | "in_progress" | "completed";
-    clientId: string;
-    createdAt: string;
-    // Otras propiedades relevantes...
-}
-
+import { Process } from "@/utils/types/types";
 
 
 /**
@@ -30,9 +19,9 @@ export const getProcesses = async (): Promise<Process[]> => {
         return await handleResponse(response);
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Error al eliminar cliente: ${error.message}`);
+            throw new Error(`Error al obtener el proceso: ${error.message}`);
         } else {
-            throw new Error("Error al eliminar cliente");
+            throw new Error("Error al obtener el proceso");
         }
     }
 };
@@ -42,8 +31,8 @@ export const getProcesses = async (): Promise<Process[]> => {
  * @param {Omit<Process, "id">} data - Datos del proceso a crear (sin el campo "id").
  * @returns {Promise<Process>} Proceso creado.
  */
-export const createProcess = async (data: Omit<Process, "id">): Promise<Process> => {
-    console.log("🚀 ~ createProcess ~ data:", data);
+export const createProcess = async (data: Process): Promise<Process> => {
+
     try {
         // Realiza una petición HTTP POST a la ruta /processes de la API.
         const response = await fetch(`${API_URL}/processes`, {
@@ -55,9 +44,9 @@ export const createProcess = async (data: Omit<Process, "id">): Promise<Process>
         return await handleResponse(response);
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Error al eliminar cliente: ${error.message}`);
+            throw new Error(`Error al crear el proceso: ${error.message}`);
         } else {
-            throw new Error("Error al eliminar cliente");
+            throw new Error("Error al crear el proceso");
         }
     }
 };

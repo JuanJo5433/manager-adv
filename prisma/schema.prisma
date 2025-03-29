@@ -21,23 +21,80 @@ model Client {
 
   @@map("clients")
 }
-
 model Users {
-  id        String    @id @default(uuid())
+  id        String         @id @default(uuid())
   name      String?
   username  String?
-  email     String    @unique
+  email     String         @unique
   password  String
   rol       String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  processes Process[] // Relación con procesos asignados
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  processes ProcessUsers[] // Relación muchos a muchos con Process
   Task      Task[]
-  comments  Comments[] // Comentarios escritos por el usuario
-
+  comments  Comments[]
 
   @@map("users")
 }
+model Process {
+  id        String             @id @default(uuid())
+  title     String
+  slug      String             @unique
+  clientId  String
+  client    Client             @relation(fields: [clientId], references: [id])
+  users     ProcessUsers[]     // Relación muchos a muchos con Users
+  products  ProcessProducts[]  // Relación muchos a muchos con Products
+  status    Int                @default(0) // 0=Pendiente, 1=En desarrollo, 2=Completado
+  tasks     Task[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@map("process")
+}
+
+
+
+model ProcessUsers {
+  id        String   @id @default(uuid())
+  processId String
+  userId    String
+  process   Process  @relation(fields: [processId], references: [id])
+  user      Users    @relation(fields: [userId], references: [id])
+
+  @@unique([processId, userId]) // Asegura que no se repitan combinaciones de usuario y proceso
+  @@map("process_users")
+}
+
+
+model ProcessProducts {
+  id         String   @id @default(uuid())
+  processId  String
+  productId  String
+  process    Process  @relation(fields: [processId], references: [id], onDelete: Cascade)
+  product    Products @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([processId, productId]) // Evita duplicados en la relación
+  @@map("process_products")
+}
+
+model Products {
+  id            String             @id @default(uuid())
+  name          String
+  description   String?
+  price         Float
+  discount      Float?
+  imageUrl      String?
+  availability  Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  deletedAt     DateTime?
+  productTypeId String
+  productType   ProductType         @relation(fields: [productTypeId], references: [id])
+  processes     ProcessProducts[]   // Relación muchos a muchos con Process
+
+  @@map("products")
+}
+
 
 model ProductType {
   id        String    @id @default(uuid())
@@ -50,41 +107,6 @@ model ProductType {
   @@map("product_types")
 }
 
-model Products {
-  id            String    @id @default(uuid())
-  name          String
-  description   String?
-  price         Float
-  discount      Float?
-  imageUrl      String?
-  processId     String?
-  process       Process?    @relation(fields: [processId], references: [id])
-  availability  Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
-  productTypeId String // Relación con ProductType
-  productType   ProductType @relation(fields: [productTypeId], references: [id])
-
-  @@map("products")
-}
-
-model Process {
-  id        String     @id @default(uuid())
-  title     String
-  slug      String     @unique
-  clientId  String?
-  client    Client?    @relation(fields: [clientId], references: [id])
-  userId    String // Usuario asignado al proceso
-  user      Users      @relation(fields: [userId], references: [id])
-  products  Products[]
-  status    Int    @default(0) //0=Pendiente
-  tasks     Task[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  @@map("process")
-}
 
 model Task {
   id          String    @id @default(uuid())

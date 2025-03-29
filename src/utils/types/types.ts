@@ -18,7 +18,7 @@ export interface Users {
   email: string;
   password: string;
   rol?: string | null;
-  Process: Process[]; // Procesos asignados
+  processes: ProcessUsers[]; // Procesos asignados
   Task: Task[];
   comments: Comments[];
 }
@@ -33,6 +33,7 @@ export interface ProductType {
 
 // INTERFAZ DE PRODUCTOS
 export interface Products {
+  productId: string;
   id: string;
   name: string;
   description?: string | null;
@@ -53,10 +54,9 @@ export interface Process {
   id: string;
   title: string;
   slug: string;
-  clientId?: string | null;
-  client?: Client | null;
-  userId: string;
-  user: Users;
+  clientId: string;
+  client: Client;
+  users?: ProcessUsers[]
   products: Products[];
   status: number; // 0=Pendiente, etc.
   tasks: Task[];
@@ -80,9 +80,27 @@ export interface Task {
 
 // INTERFAZ DE COMENTARIOS
 export interface Comments {
+  user: any;
   id: string;
   text: string;
   taskId: string;
   userId: string;
   createdAt: Date;
+}
+
+
+export interface ProcessUsers{
+  name: any;
+  id: string;
+  processId:string;
+  userId: string;
+  process: Process;
+  user: Users; 
+}
+export interface processProducts{
+  id: string;
+  processId:string;
+  productId: string;
+  process: Process;
+  product: Products; 
 }

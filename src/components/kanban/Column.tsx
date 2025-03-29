@@ -44,6 +44,9 @@ const KanbanColumn: FC<KanbanColumnProps> = ({
     onEdit,
     onViewDetails,
 }) => {
+
+    
+
     return (
         <div
             className={`flex-1 min-w-[300px] mx-5 rounded-lg p-4 border-t-4 bg-white shadow-lg 
