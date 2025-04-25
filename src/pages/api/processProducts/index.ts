@@ -1,9 +1,7 @@
 import { handleErrorResponse } from "@/utils/handleErrorResponse";
-import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// Inicializa la instancia de Prisma.
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,

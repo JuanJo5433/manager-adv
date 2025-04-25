@@ -104,3 +104,35 @@ export interface processProducts{
   process: Process;
   product: Products; 
 }
+
+export interface Suppliers{
+  id: string;
+  name: string;
+  nameRepresentative?: string | null;
+  nit: string;
+  description: string;
+  email?: string | null;
+  phone?: string  | null;
+  urlWeb?: string  | null;
+  conditions: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  supplierTypes: SuppliersSupplierTypes[];
+}
+export interface SuppliersSupplierTypes{
+  id: string;
+  supplierId: string;
+  supplierTypeId: string;
+  supplier: Suppliers;
+  supplierType: SupplierType;
+}
+
+export interface SupplierType{
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  suppliers: SuppliersSupplierTypes[];
+}

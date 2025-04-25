@@ -12,9 +12,6 @@ export const getUsers = async (): Promise<Users[]> => {
         // Realiza una petición HTTP GET a la API para obtener el usuario con el ID especificado.
         const response = await fetch(`${API_URL}/users`);
         
-        // Imprime en consola la respuesta recibida para fines de depuración.
-        console.log("🚀 ~ getUsers ~ response:", response);
-
         // Procesa la respuesta y devuelve los datos en formato JSON utilizando la función handleResponse.
         return await handleResponse(response);
     } catch (error) {

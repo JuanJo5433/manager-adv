@@ -5,7 +5,7 @@ import DeleteConfirmationModal from "@/components/clients/DeleteConfirmationModa
 import EditClientModal from "@/components/clients/EditClientModal";
 import Pagination from "@/components/common/Pagination";
 import Sidebar from "@/components/sidebar/Sidebar";
-import useClientManagement from "@/hooks/useClientMangement";
+import useClientManagement from "@/hooks/client/useClientMangement";
 
 // Define el tipo de datos para un cliente.
 import { Client } from "@/utils/types/types";

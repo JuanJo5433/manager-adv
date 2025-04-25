@@ -7,6 +7,7 @@ import { AiOutlineProduct } from "react-icons/ai";
 import { IoAnalyticsOutline } from "react-icons/io5";
 import { IoSettingsOutline } from "react-icons/io5";
 import { GrFolderCycle } from "react-icons/gr";
+import { IoBusinessSharp } from "react-icons/io5";
 import { Session } from "next-auth";
 import React from "react";
 
@@ -29,6 +30,7 @@ const Sidebar: FC = () => {
     analytics: <IoAnalyticsOutline />,
     users: <FiUsers />,
     products: <AiOutlineProduct />,
+    suppliers: <IoBusinessSharp />,
     process: <GrFolderCycle />,
     settings: <IoSettingsOutline />,
   };
@@ -38,6 +40,7 @@ const Sidebar: FC = () => {
     { name: "Analíticas", icon: icons.analytics, href: "#" },
     { name: "Clientes", icon: icons.users, href: "/dashboard/clients" },
     { name: "Productos", icon: icons.products, href: "/dashboard/products" },
+    { name: "Proveedores", icon: icons.suppliers, href: "/dashboard/suppliers"},
     { name: "Procesos", icon: icons.process, href: "/dashboard/processes" },
     { name: "Configuración", icon: icons.settings, href: "#" },
   ];
